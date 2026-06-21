@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="冷蔵庫の食材・余り物・保存レシピから毎日の献立を提案するスマホ専用レシピアシスタント">
+  <title>まいにちレシピアシスタント</title>
+  <style>
+    :root {
+      --bg: #fff8ef;
+      --card: #ffffff;
+      --ink: #2d241f;
+      --muted: #786a60;
+      --brand: #ff7a45;
+      --brand-dark: #e85e2a;
+      --soft: #ffe8d9;
+      --green: #4f9a68;
+      --line: #f0dccd;
+      --shadow: 0 12px 30px rgba(94, 50, 25, .13);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, #ffe2c7 0, transparent 34vw),
+        linear-gradient(180deg, #fff6ec 0%, var(--bg) 48%, #fff 100%);
+      min-height: 100vh;
+    }
+
+    button, input, textarea { font: inherit; }
+
+    .app {
+      width: min(100%, 480px);
+      margin: 0 auto;
+      padding: 18px 16px 96px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      margin: -18px -16px 18px;
+      padding: calc(env(safe-area-inset-top) + 16px) 16px 14px;
+      background: rgba(255, 248, 239, .92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(240, 220, 205, .7);
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      line-height: 1.18;
+      letter-spacing: .02em;
+    }
+
+    .tagline {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    .chef {
+      flex: 0 0 auto;
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      font-size: 2rem;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .tab {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 6px;
+      background: #fff;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: .78rem;
+      box-shadow: 0 5px 14px rgba(94, 50, 25, .08);
+    }
+
+    .tab.active {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    section { display: none; }
+    section.active { display: block; }
+
+    .card {
+      background: rgba(255, 255, 255, .94);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin: 14px 0;
+      box-shadow: var(--shadow);
+    }
+
+    h2, h3 { margin: 0 0 12px; }
+    h2 { font-size: 1.15rem; }
+    h3 { font-size: 1rem; }
+
+    .hint {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.55;
+      margin: -4px 0 12px;
+    }
+
+    label {
+      display: block;
+      font-weight: 800;
+      font-size: .88rem;
+      margin: 14px 0 7px;
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      background: #fffdfb;
+      padding: 13px 14px;
+      color: var(--ink);
+      outline: none;
+    }
+
+    textarea { min-height: 104px; resize: vertical; }
+    input:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(255, 122, 69, .12); }
+
+    .btn {
+      width: 100%;
+      border: 0;
+      border-radius: 17px;
+      padding: 14px 16px;
+      margin-top: 12px;
+      background: var(--brand);
+      color: white;
+      font-weight: 900;
+      box-shadow: 0 10px 18px rgba(255, 122, 69, .28);
+    }
+
+    .btn.secondary {
+      background: #fff;
+      color: var(--brand-dark);
+      border: 1.5px solid var(--soft);
+      box-shadow: none;
+    }
+
+    .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .pillbox { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: #7e351d;
+      font-weight: 800;
+      font-size: .83rem;
+    }
+
+    .result { display: grid; gap: 10px; }
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 13px;
+      background: #fffdf9;
+    }
+
+    .item strong { display: block; margin-bottom: 5px; }
+    .item small { color: var(--muted); line-height: 1.45; }
+    .item a { color: var(--brand-dark); word-break: break-all; }
+
+    .recipe-img {
+      width: 100%;
+      max-height: 170px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-top: 10px;
+      border: 1px solid var(--line);
+    }
+
+    .empty {
+      padding: 15px;
+      border-radius: 18px;
+      background: #fff3e8;
+      color: #80513d;
+      line-height: 1.55;
+      font-size: .9rem;
+    }
+
+    .family-card {
+      background: linear-gradient(135deg, #4f9a68, #72bd84);
+      color: #fff;
+      border: 0;
+    }
+    .family-card .hint { color: rgba(255,255,255,.86); }
+    .family-card input, .family-card textarea { border-color: rgba(255,255,255,.48); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(env(safe-area-inset-bottom) + 22px);
+      transform: translateX(-50%) translateY(120px);
+      width: min(calc(100% - 32px), 440px);
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #2d241f;
+      color: white;
+      text-align: center;
+      font-weight: 800;
+      transition: .25s ease;
+      z-index: 10;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (min-width: 700px) {
+      body { background-size: auto; }
+      .app { padding-top: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="hero">
+        <div>
+          <h1>まいにち<br>レシピアシスタント</h1>
+          <p class="tagline">冷蔵庫・余り物・あと一品をスマホで解決</p>
+        </div>
+        <div class="chef" aria-hidden="true">🍳</div>
+      </div>
+      <nav class="tabs" aria-label="メインメニュー">
+        <button class="tab active" data-tab="home">提案</button>
+        <button class="tab" data-tab="search">検索</button>
+        <button class="tab" data-tab="save">保存</button>
+        <button class="tab" data-tab="family">家族</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="home" class="active">
+        <div class="card">
+          <h2>今日の材料を入力</h2>
+          <p class="hint">1行に1つずつ入力すると、提案レシピ・リメイク・代用品・料理ハックをまとめて表示します。</p>
+          <label for="ingredients">食材入力</label>
+          <textarea id="ingredients" placeholder="豚肉&#10;玉ねぎ&#10;キャベツ"></textarea>
+          <label for="leftovers">余り物入力</label>
+          <textarea id="leftovers" placeholder="肉じゃが&#10;ポテトサラダ&#10;カレー&#10;切り干し大根"></textarea>
+          <div class="quick-grid">
+            <button class="btn" id="suggestBtn">提案する</button>
+            <button class="btn secondary" id="clearBtn">クリア</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>献立・リメイク提案</h2>
+          <div id="suggestions" class="result"><div class="empty">食材や余り物を入力して「提案する」を押してください。</div></div>
+        </div>
+      </section>
+
+      <section id="search">
+        <div class="card">
+          <h2>レシピ検索</h2>
+          <p class="hint">「キャベツ」などの食材名で、保存レシピとアプリ内の提案レシピを同時に検索します。</p>
+          <label for="searchWord">食材名・料理名</label>
+          <input id="searchWord" placeholder="キャベツ">
+          <button class="btn" id="searchBtn">検索する</button>
+        </div>
+        <div class="card"><h3>検索結果</h3><div id="searchResults" class="result"><div class="empty">検索キーワードを入力してください。</div></div></div>
+      </section>
+
+      <section id="save">
+        <div class="card">
+          <h2>保存レシピ登録</h2>
+          <label for="recipeName">レシピ名</label><input id="recipeName" placeholder="キャベツと豚肉の味噌炒め">
+          <label for="recipeUrl">URL</label><input id="recipeUrl" type="url" placeholder="https://example.com/recipe">
+          <label for="recipeMemo">メモ</label><textarea id="recipeMemo" placeholder="家族に好評。キャベツ多め。"></textarea>
+          <label for="recipeImage">画像</label><input id="recipeImage" type="file" accept="image/*">
+          <button class="btn" id="saveRecipeBtn">保存する</button>
+        </div>
+        <div class="card"><h3>保存済みレシピ</h3><div id="savedRecipes" class="result"></div></div>
+      </section>
+
+      <section id="family">
+        <div class="card family-card">
+          <h2>家族情報</h2>
+          <p class="hint">初回のみ登録。人数や年齢に合わせて提案文を少し調整します。端末のlocalStorageに保存されます。</p>
+          <label for="familyCount">家族人数</label><input id="familyCount" inputmode="numeric" placeholder="4">
+          <label for="familyAges">年齢</label><input id="familyAges" placeholder="大人2人、6歳、3歳">
+          <label for="favoriteMeals">よく作る料理</label><textarea id="favoriteMeals" placeholder="肉じゃが&#10;カレー&#10;親子丼"></textarea>
+          <button class="btn" id="saveFamilyBtn">家族情報を保存</button>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const recipeIdeas = [
+      {name:'豚肉とキャベツの味噌炒め', keys:['豚肉','キャベツ','味噌'], memo:'10分で主菜。玉ねぎを足すと甘みアップ。'},
+      {name:'キャベツの塩昆布ナムル', keys:['キャベツ','塩昆布'], memo:'あと一品に。ごま油で香りよく。'},
+      {name:'玉ねぎと卵の甘辛丼', keys:['玉ねぎ','卵'], memo:'朝食・昼食にも使いやすい節約丼。'},
+      {name:'豚肉のしょうが焼き', keys:['豚肉','玉ねぎ'], memo:'弁当にも夕食にも合う定番。'},
+      {name:'野菜たっぷりスープ', keys:['キャベツ','玉ねぎ','にんじん'], memo:'余った野菜をまとめて消費。'}
+    ];
+
+    const remakeIdeas = [
+      {need:['ポテトサラダ','豚肉'], title:'肉巻きポテトサラダ', memo:'ポテサラを豚肉で巻いて焼き、甘辛だれで主菜に。'},
+      {need:['カレー','チーズ'], title:'焼きカレー', memo:'ご飯にカレーとチーズをのせてトースターへ。'},
+      {need:['カレー'], title:'カレーコロッケ', memo:'じゃがいもを混ぜて丸め、パン粉焼きでもOK。'},
+      {need:['切り干し大根'], title:'切り干し大根ちらし寿司', memo:'酢飯に混ぜるだけで食感のよい副菜ごはん。'},
+      {need:['肉じゃが'], title:'肉じゃがオムレツ', memo:'刻んで卵で包むと朝食・弁当に便利。'}
+    ];
+
+    const menus = {
+      '肉じゃが': ['あと一品: キャベツの浅漬け、豆腐のみそ汁', '朝食: 肉じゃが卵とじ丼', '弁当: 肉じゃがコロッケ風、青菜ごま和え', '夕食: 焼き魚、冷ややっこを追加'],
+      'カレー': ['あと一品: ヨーグルトサラダ、きゅうりの即席漬け', '朝食: カレーチーズトースト', '弁当: ドライカレー風おにぎり', '夕食: 焼きカレーと温野菜'],
+      'ポテトサラダ': ['あと一品: わかめスープ', '朝食: ポテサラサンド', '弁当: 肉巻きポテサラ', '夕食: フライ風パン粉焼き']
+    };
+
+    const substitutes = {
+      'めんつゆ': '醤油 大さじ2 + みりん 大さじ2 + 砂糖 小さじ1 + だし少々',
+      '卵': '衣ならマヨネーズ、つなぎなら片栗粉や豆腐で代用',
+      '小麦粉': '片栗粉、米粉、パン粉を用途に合わせて代用',
+      'チーズ': 'マヨネーズ＋パン粉でコクと焼き色を補う'
+    };
+
+    const hacks = [
+      {key:'ささみカツ', text:'卵と小麦粉の代わりにマヨネーズを薄く塗ると、パン粉が付きやすくしっとり。'},
+      {key:'キャベツ', text:'千切りは水に長くさらさず、短時間でシャキッと。外葉は炒め物へ。'},
+      {key:'豚肉', text:'下味に砂糖を少量入れると保水され、冷めてもやわらかい。'}
+    ];
+
+    const $ = id => document.getElementById(id);
+    const getLines = id => $(id).value.split(/\n|、|,/).map(v => v.trim()).filter(Boolean);
+    const load = (key, fallback) => JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+    const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+
+    function showToast(message) {
+      $('toast').textContent = message;
+      $('toast').classList.add('show');
+      setTimeout(() => $('toast').classList.remove('show'), 1800);
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab, section').forEach(el => el.classList.remove('active'));
+      tab.classList.add('active');
+      $(tab.dataset.tab).classList.add('active');
+    }));
+
+    function card(title, memo, extra = '') {
+      return `<article class="item"><strong>${title}</strong><small>${memo}</small>${extra}</article>`;
+    }
+
+    function renderSuggestions() {
+      const ingredients = getLines('ingredients');
+      const leftovers = getLines('leftovers');
+      const all = [...ingredients, ...leftovers];
+      const family = load('familyInfo', null);
+      const results = [];
+
+      recipeIdeas.filter(r => r.keys.some(k => all.includes(k))).forEach(r => {
+        results.push(card('🍽 ' + r.name, r.memo + (family?.count ? ` ${family.count}人分に調整して作り置きもおすすめ。` : '')));
+      });
+      leftovers.forEach(food => (menus[food] || []).forEach(m => results.push(card('🧺 ' + food + 'の献立', m))));
+      remakeIdeas.filter(r => r.need.every(n => all.includes(n))).forEach(r => results.push(card('🔁 ' + r.title, r.memo)));
+      Object.entries(substitutes).filter(([k]) => all.some(v => v.includes(k + 'がない') || v === k)).forEach(([k, v]) => results.push(card('🔄 ' + k + 'の代用', v)));
+      hacks.filter(h => all.some(v => v.includes(h.key) || h.key.includes(v))).forEach(h => results.push(card('💡 料理ハック: ' + h.key, h.text)));
+
+      $('suggestions').innerHTML = results.length ? results.join('') : '<div class="empty">定番提案: 主菜＋汁物＋野菜の副菜で整えましょう。例: 豚肉ならしょうが焼き、キャベツなら塩昆布ナムル。</div>';
+    }
+
+    function renderSavedRecipes() {
+      const recipes = load('savedRecipes', []);
+      $('savedRecipes').innerHTML = recipes.length ? recipes.map((r, i) => card(
+        '📌 ' + r.name,
+        `${r.memo || 'メモなし'}<br>${r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.url}</a>` : ''}`,
+        `${r.image ? `<img class="recipe-img" src="${r.image}" alt="${r.name}">` : ''}<button class="btn secondary" onclick="deleteRecipe(${i})">削除</button>`
+      )).join('') : '<div class="empty">まだ保存レシピがありません。</div>';
+    }
+
+    window.deleteRecipe = index => {
+      const recipes = load('savedRecipes', []);
+      recipes.splice(index, 1);
+      save('savedRecipes', recipes);
+      renderSavedRecipes();
+    };
+
+    function searchRecipes() {
+      const q = $('searchWord').value.trim();
+      if (!q) return;
+      const saved = load('savedRecipes', []).filter(r => [r.name, r.memo].join(' ').includes(q));
+      const ideas = recipeIdeas.filter(r => [r.name, r.memo, ...r.keys].join(' ').includes(q));
+      const html = [
+        ...saved.map(r => card('保存レシピ: ' + r.name, `${r.memo || ''}<br>${r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.url}</a>` : ''}`, r.image ? `<img class="recipe-img" src="${r.image}" alt="${r.name}">` : '')),
+        ...ideas.map(r => card('提案レシピ: ' + r.name, r.memo))
+      ];
+      $('searchResults').innerHTML = html.length ? html.join('') : '<div class="empty">該当なし。別の食材名で検索してみてください。</div>';
+    }
+
+    $('suggestBtn').addEventListener('click', renderSuggestions);
+    $('clearBtn').addEventListener('click', () => { $('ingredients').value = ''; $('leftovers').value = ''; renderSuggestions(); });
+    $('searchBtn').addEventListener('click', searchRecipes);
+    $('searchWord').addEventListener('keydown', e => { if (e.key === 'Enter') searchRecipes(); });
+
+    $('saveRecipeBtn').addEventListener('click', () => {
+      const name = $('recipeName').value.trim();
+      if (!name) return showToast('レシピ名を入力してください');
+      const file = $('recipeImage').files[0];
+      const done = image => {
+        const recipes = load('savedRecipes', []);
+        recipes.unshift({ name, url: $('recipeUrl').value.trim(), memo: $('recipeMemo').value.trim(), image });
+        save('savedRecipes', recipes);
+        ['recipeName', 'recipeUrl', 'recipeMemo'].forEach(id => $(id).value = '');
+        $('recipeImage').value = '';
+        renderSavedRecipes();
+        showToast('レシピを保存しました');
+      };
+      if (!file) return done('');
+      const reader = new FileReader();
+      reader.onload = () => done(reader.result);
+      reader.readAsDataURL(file);
+    });
+
+    $('saveFamilyBtn').addEventListener('click', () => {
+      save('familyInfo', { count: $('familyCount').value.trim(), ages: $('familyAges').value.trim(), favorites: $('favoriteMeals').value.trim() });
+      showToast('家族情報を保存しました');
+    });
+
+    function init() {
+      const family = load('familyInfo', null);
+      if (family) { $('familyCount').value = family.count || ''; $('familyAges').value = family.ages || ''; $('favoriteMeals').value = family.favorites || ''; }
+      renderSavedRecipes();
+    }
+    init();
+  </script>
+</body>
+</html>
